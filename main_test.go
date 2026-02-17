@@ -3,8 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 )
@@ -19,24 +21,20 @@ func TestGreetingHandler(t *testing.T) {
 	res := w.Result()
 	defer res.Body.Close()
 
-	// Check status code
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("expected status 200, got %d", res.StatusCode)
 	}
 
-	// Check Content-Type
 	contentType := res.Header.Get("Content-Type")
 	if contentType != "application/json" {
 		t.Errorf("expected Content-Type application/json, got %s", contentType)
 	}
 
-	// Decode response
 	var response Response
 	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	// Verify response structure
 	if !response.Success {
 		t.Error("expected success to be true")
 	}
@@ -49,7 +47,6 @@ func TestGreetingHandler(t *testing.T) {
 		t.Fatal("expected data field to be present")
 	}
 
-	// Verify data structure (type assertion)
 	dataMap, ok := response.Data.(map[string]interface{})
 	if !ok {
 		t.Fatal("expected data to be a map")
@@ -63,7 +60,6 @@ func TestGreetingHandler(t *testing.T) {
 		t.Error("expected 'timestamp' field in data")
 	}
 
-	// Verify timestamp is valid RFC3339 format
 	if timestamp, ok := dataMap["timestamp"].(string); ok {
 		if _, err := time.Parse(time.RFC3339, timestamp); err != nil {
 			t.Errorf("invalid timestamp format: %v", err)
@@ -115,18 +111,15 @@ func TestHealthHandler(t *testing.T) {
 	res := w.Result()
 	defer res.Body.Close()
 
-	// Check status code
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("expected status 200, got %d", res.StatusCode)
 	}
 
-	// Decode response
 	var response Response
 	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	// Verify response structure
 	if !response.Success {
 		t.Error("expected success to be true")
 	}
@@ -135,7 +128,6 @@ func TestHealthHandler(t *testing.T) {
 		t.Fatal("expected data field to be present")
 	}
 
-	// Verify health status
 	dataMap, ok := response.Data.(map[string]interface{})
 	if !ok {
 		t.Fatal("expected data to be a map")
@@ -176,18 +168,15 @@ func TestEchoHandlerValidJSON(t *testing.T) {
 	res := w.Result()
 	defer res.Body.Close()
 
-	// Check status code
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("expected status 200, got %d", res.StatusCode)
 	}
 
-	// Decode response
 	var response Response
 	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	// Verify response structure
 	if !response.Success {
 		t.Error("expected success to be true")
 	}
@@ -196,7 +185,6 @@ func TestEchoHandlerValidJSON(t *testing.T) {
 		t.Fatal("expected data field to be present")
 	}
 
-	// Verify echo data
 	dataMap, ok := response.Data.(map[string]interface{})
 	if !ok {
 		t.Fatal("expected data to be a map")
@@ -210,7 +198,6 @@ func TestEchoHandlerValidJSON(t *testing.T) {
 		t.Errorf("expected echoed message 'Echo: Hello, World!', got %v", dataMap["echoed"])
 	}
 
-	// Verify length is correct
 	if length, ok := dataMap["length"].(float64); !ok || int(length) != 13 {
 		t.Errorf("expected length 13, got %v", dataMap["length"])
 	}
@@ -379,18 +366,15 @@ func TestRespondJSON(t *testing.T) {
 	res := w.Result()
 	defer res.Body.Close()
 
-	// Verify status code
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("expected status 200, got %d", res.StatusCode)
 	}
 
-	// Verify Content-Type
 	contentType := res.Header.Get("Content-Type")
 	if contentType != "application/json" {
 		t.Errorf("expected Content-Type application/json, got %s", contentType)
 	}
 
-	// Verify response can be decoded
 	var decoded Response
 	if err := json.NewDecoder(res.Body).Decode(&decoded); err != nil {
 		t.Fatalf("failed to decode response: %v", err)
@@ -398,5 +382,122 @@ func TestRespondJSON(t *testing.T) {
 
 	if decoded.Success != response.Success {
 		t.Errorf("expected success %v, got %v", response.Success, decoded.Success)
+	}
+}
+
+// brokenWriter simulates a ResponseWriter that fails on Write
+type brokenWriter struct {
+	httptest.ResponseRecorder
+}
+
+func (b *brokenWriter) Write(p []byte) (int, error) {
+	return 0, fmt.Errorf("simulated write error")
+}
+
+// TestRespondJSONEncodingError tests the error path in respondJSON
+func TestRespondJSONEncodingError(t *testing.T) {
+	w := &brokenWriter{*httptest.NewRecorder()}
+	response := Response{
+		Success: true,
+		Message: "test",
+	}
+	// Should not panic even when write fails
+	respondJSON(w, http.StatusOK, response)
+}
+
+// TestNewServer tests that newServer creates a properly configured server
+func TestNewServer(t *testing.T) {
+	server := newServer("9090")
+
+	if server == nil {
+		t.Fatal("expected server to be non-nil")
+	}
+
+	if server.Addr != ":9090" {
+		t.Errorf("expected addr :9090, got %s", server.Addr)
+	}
+
+	if server.ReadTimeout != 10*time.Second {
+		t.Errorf("expected ReadTimeout 10s, got %v", server.ReadTimeout)
+	}
+
+	if server.WriteTimeout != 10*time.Second {
+		t.Errorf("expected WriteTimeout 10s, got %v", server.WriteTimeout)
+	}
+
+	if server.IdleTimeout != 60*time.Second {
+		t.Errorf("expected IdleTimeout 60s, got %v", server.IdleTimeout)
+	}
+
+	if server.Handler == nil {
+		t.Error("expected server handler to be set")
+	}
+}
+
+// TestNewServerRoutes tests that newServer registers all routes correctly
+func TestNewServerRoutes(t *testing.T) {
+	server := newServer("8080")
+	ts := httptest.NewServer(server.Handler)
+	defer ts.Close()
+
+	// Test greeting route
+	res, err := http.Get(ts.URL + "/")
+	if err != nil {
+		t.Fatalf("failed to GET /: %v", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("expected 200 from /, got %d", res.StatusCode)
+	}
+
+	// Test health route
+	res, err = http.Get(ts.URL + "/healthz")
+	if err != nil {
+		t.Fatalf("failed to GET /healthz: %v", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("expected 200 from /healthz, got %d", res.StatusCode)
+	}
+
+	// Test echo route
+	payload := bytes.NewBufferString(`{"message": "test"}`)
+	res, err = http.Post(ts.URL+"/echo", "application/json", payload)
+	if err != nil {
+		t.Fatalf("failed to POST /echo: %v", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("expected 200 from /echo, got %d", res.StatusCode)
+	}
+}
+
+// TestGetPort tests the getPort function
+func TestGetPort(t *testing.T) {
+	// Test default port
+	os.Unsetenv("PORT")
+	port := getPort()
+	if port != "8080" {
+		t.Errorf("expected default port 8080, got %s", port)
+	}
+
+	// Test custom port from environment
+	os.Setenv("PORT", "3000")
+	defer os.Unsetenv("PORT")
+	port = getPort()
+	if port != "3000" {
+		t.Errorf("expected port 3000, got %s", port)
+	}
+}
+
+// BenchmarkEchoHandler benchmarks the echo endpoint performance
+func BenchmarkEchoHandler(b *testing.B) {
+	payload := `{"message": "benchmark test"}`
+	for i := 0; i < b.N; i++ {
+		req := httptest.NewRequest(http.MethodPost, "/echo",
+			bytes.NewBufferString(payload))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		echoHandler(w, req)
 	}
 }

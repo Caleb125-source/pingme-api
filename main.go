@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -156,20 +157,34 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func main() {
-	// Register route handlers
-	http.HandleFunc("/", greetingHandler)
-	http.HandleFunc("/healthz", healthHandler)
-	http.HandleFunc("/echo", echoHandler)
+// newServer creates and configures the HTTP server - extracted for testability
+func newServer(port string) *http.Server {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", greetingHandler)
+	mux.HandleFunc("/healthz", healthHandler)
+	mux.HandleFunc("/echo", echoHandler)
 
-	// Configure server
-	port := "8080"
-	server := &http.Server{
+	return &http.Server{
 		Addr:         ":" + port,
+		Handler:      mux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
+}
+
+// getPort returns the port from environment variable or default
+func getPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	return port
+}
+
+func main() {
+	port := getPort()
+	server := newServer(port)
 
 	// Start server
 	log.Printf("PingMe API starting on port %s...", port)
