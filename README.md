@@ -91,7 +91,7 @@ Accepts JSON input and echoes it back with metadata.
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/pingme-api.git
+git clone https://github.com/Caleb125-source/pingme-api.git
 cd pingme-api
 ```
 
@@ -188,7 +188,7 @@ Expected output:
 --- PASS: TestEchoHandlerValidJSON (0.00s)
 ...
 PASS
-coverage: 85.2% of statements
+coverage: 70.5% of statements
 ```
 
 ### Integration Tests (Bash) — Manual
@@ -379,15 +379,9 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first,
 5. Push to the branch (`git push origin feature/amazing-feature`)
 6. Open a Pull Request
 
-## 📄 License
+## Link
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👨‍💻 Author
-
-Your Name - [@yourhandle](https://twitter.com/yourhandle)
-
-Project Link: [https://github.com/yourusername/pingme-api](https://github.com/yourusername/pingme-api)
+Project Link: [https://github.com/Caleb125-source/pingme-api](https://github.com/Caleb125-source/pingme-api)
 
 ## 🙏 Acknowledgments
 
