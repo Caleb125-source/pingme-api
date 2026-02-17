@@ -1,0 +1,30 @@
+# Git files
+.git
+.gitignore
+
+# Documentation
+README.md
+docs/
+
+# Test files
+*_test.go
+tests/
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+pingme-api
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
