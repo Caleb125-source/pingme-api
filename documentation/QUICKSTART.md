@@ -168,7 +168,7 @@ Expected output:
 --- PASS: TestEchoHandlerValidJSON (0.00s)
 ...
 PASS
-coverage: 70.5% of statements
+coverage: 82.0% of statements
 ```
 
 ### Integration Tests (Bash) — Manual
