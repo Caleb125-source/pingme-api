@@ -2,6 +2,8 @@
 
 A lightweight, beginner-friendly REST API built with Go (1.21+) that demonstrates core backend development concepts using only the standard `net/http` library.
 
+🌐 **Live Demo:** https://pingme-api.fly.dev/
+
 ## 📋 Overview
 
 PingMe API is designed for beginners and students to learn real-world backend patterns. It provides three simple but production-quality endpoints that showcase proper HTTP handling, JSON validation, and error management.
@@ -153,13 +155,13 @@ pingme-api/
 ├── CHECKLIST.md                 # Deployment checklist
 ├── docker-compose.yml           # Docker Compose configuration
 ├── Dockerfile                   # Multi-stage Docker build
+├── fly.toml                     # Fly.io deployment configuration
 ├── go.mod                       # Go module definition
-├── go.sum                       # Go dependency checksums
 ├── main.go                      # Main application entry point
-├── main_test.go                 # Go unit tests ← NEW
+├── main_test.go                 # Go unit tests
 ├── Makefile                     # Build and task automation
 ├── setup.sh                     # Environment setup script
-└── TESTING.md                   # Complete testing guide ← NEW
+└── TESTING.md                   # Complete testing guide
 ```
 
 ## 🧪 Testing
@@ -214,14 +216,14 @@ See [TESTING.md](../TESTING.md) for the complete testing guide.
 
 ## 🤖 CI/CD Pipeline
 
-This project uses GitHub Actions for automated testing and deployment.
+This project uses GitHub Actions for fully automated testing and deployment.
 
 ### How It Works
 
 ```
 git push origin main
         ↓
-GitHub Actions runs automatically:
+CI/CD Pipeline runs automatically:
   ✅ All unit tests
   ✅ Test coverage check (>80%)
   ✅ Security scan
@@ -229,8 +231,17 @@ GitHub Actions runs automatically:
   ✅ Docker image build
   ✅ Container endpoint tests
         ↓
-All pass? → Auto-deploy to production!
+All pass? → Deploy workflow triggers automatically:
+  ✅ Publishes Docker image to Docker Hub & GitHub Container Registry
+  ✅ Deploys latest version to Fly.io
+        ↓
+Live at https://pingme-api.fly.dev/ 🚀
 ```
+
+### Workflows
+
+- **CI/CD Pipeline** (`ci.yml`) — runs tests on every push to main
+- **Deploy** (`deploy.yml`) — triggers only after CI/CD Pipeline passes, publishes the Docker image and deploys to Fly.io
 
 ### View Pipeline Status
 
@@ -277,7 +288,7 @@ This project teaches:
 7. **CI/CD**
    - GitHub Actions workflows
    - Automated testing on push
-   - Automated deployment
+   - Automated deployment to Fly.io
 
 ## 🔧 Configuration
 
